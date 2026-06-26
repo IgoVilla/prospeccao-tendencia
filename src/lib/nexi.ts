@@ -74,7 +74,7 @@ export async function buscarClientesDoAgente(
     data_vencimento_contrato: undefined,
   }))
 
-  return enriquecerComCnpj(clientesMapeados)
+  return clientesMapeados
 }
 
 export async function buscarDadosCnpj(cnpj: string) {
@@ -91,32 +91,3 @@ export async function buscarDadosCnpj(cnpj: string) {
   }
 }
 
-async function enriquecerComCnpj(
-  clientes: ClienteComCidade[]
-): Promise<ClienteComCidade[]> {
-  const semUf = clientes.filter((c) => !c.uf && c.cnpj)
-  if (semUf.length === 0) return clientes
-
-  const LOTE = 10
-  const resultados = new Map<string, { uf: string; cidade: string }>()
-
-  for (let i = 0; i < semUf.length; i += LOTE) {
-    const lote = semUf.slice(i, i + LOTE)
-    const respostas = await Promise.all(lote.map((c) => buscarDadosCnpj(c.cnpj)))
-    for (let j = 0; j < lote.length; j++) {
-      const dados = respostas[j]
-      if (dados?.uf) {
-        resultados.set(lote[j].bubble_id, {
-          uf: dados.uf,
-          cidade: dados.municipio ?? '',
-        })
-      }
-    }
-  }
-
-  return clientes.map((c) => {
-    const enriquecido = resultados.get(c.bubble_id)
-    if (!enriquecido) return c
-    return { ...c, uf: enriquecido.uf, cidade: enriquecido.cidade }
-  })
-}

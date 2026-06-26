@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Atividade } from '@/types'
 import { ClienteComCidade } from '@/lib/nexi'
 import { followUpAtrasado, renovacaoProxima } from '@/lib/utils'
@@ -27,7 +27,29 @@ export default function PainelMasterDetail({
   const [filtroUltimoStatus, setFiltroUltimoStatus] = useState('')
   const [busca, setBusca] = useState('')
   const [atividadesLocais, setAtividadesLocais] = useState<Record<string, Atividade[]>>(atividadesPorCliente)
-  const [metaLocais, setMetaLocais] = useState<Record<string, { concorrente_atual?: string; data_vencimento_contrato?: string; proximo_follow_up?: string }>>({})
+  const [metaLocais, setMetaLocais] = useState<Record<string, { concorrente_atual?: string; data_vencimento_contrato?: string; proximo_follow_up?: string; uf?: string; cidade?: string }>>({})
+
+  useEffect(() => {
+    const payload = clientes.map((c) => ({ bubble_id: c.bubble_id, cnpj: c.cnpj }))
+    fetch('/api/enriquecer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientes: payload }),
+    })
+      .then((r) => r.json())
+      .then(({ enriquecidos }: { enriquecidos: { bubble_id: string; uf: string; cidade: string }[] }) => {
+        if (!enriquecidos?.length) return
+        setMetaLocais((prev) => {
+          const next = { ...prev }
+          for (const e of enriquecidos) {
+            next[e.bubble_id] = { ...(next[e.bubble_id] ?? {}), uf: e.uf, cidade: e.cidade }
+          }
+          return next
+        })
+      })
+      .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const clientesComMeta = useMemo(() =>
     clientes.map((c) => ({ ...c, ...(metaLocais[c.bubble_id] ?? {}) })),

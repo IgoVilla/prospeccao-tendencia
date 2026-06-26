@@ -16,23 +16,28 @@ export default async function PainelPage() {
   const clientes = await buscarClientesDoAgente(bubbleId, bubbleToken)
   const clienteIds = clientes.map((c) => c.bubble_id)
 
-  const [metasResult, atividadesResult] = await Promise.all([
+  const [metasResult, atividadesResult, enriqResult] = await Promise.all([
     supabase.from('pt_clientes_meta').select('*').in('cliente_id', clienteIds),
     supabase
       .from('pt_atividades')
       .select('*')
       .in('cliente_id', clienteIds)
       .order('created_at', { ascending: false }),
+    supabase.from('pt_clientes_enriquecimento').select('*').in('bubble_id', clienteIds),
   ])
 
   const metas = metasResult.data ?? []
   const atividades = atividadesResult.data ?? []
+  const enriqMap = Object.fromEntries((enriqResult.data ?? []).map((e: { bubble_id: string; uf: string; cidade: string }) => [e.bubble_id, e]))
 
   const clientesCompletos = clientes.map((c) => {
     const meta = metas.find((m) => m.cliente_id === c.bubble_id)
     const atividade = atividades.find((a) => a.cliente_id === c.bubble_id)
+    const enriq = enriqMap[c.bubble_id]
     return {
       ...c,
+      uf: enriq?.uf || c.uf,
+      cidade: enriq?.cidade || c.cidade,
       concorrente_atual: meta?.concorrente_atual,
       data_vencimento_contrato: meta?.data_vencimento_contrato,
       ultimo_contato: atividade,

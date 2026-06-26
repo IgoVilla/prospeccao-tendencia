@@ -4,7 +4,8 @@ import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL!
-  const response = NextResponse.redirect(`${APP_URL}/`)
+  const bubbleLogout = `https://nexiplay.com/user/logout?redirect=${encodeURIComponent(APP_URL + '/')}`
+  const response = NextResponse.redirect(bubbleLogout)
 
   const cookieStore = await cookies()
 

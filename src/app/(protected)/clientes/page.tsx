@@ -22,9 +22,10 @@ export default async function ClientesPage() {
   if (clientes.length > 0) {
     const clienteIds = clientes.map((c) => c.id)
 
-    const [{ data: atividades }, { data: metas }] = await Promise.all([
+    const [{ data: atividades }, { data: metas }, { data: enriquecimento }] = await Promise.all([
       supabase.from('pt_atividades').select('*').in('cliente_id', clienteIds).order('created_at', { ascending: false }),
       supabase.from('pt_clientes_meta').select('*').in('cliente_id', clienteIds),
+      supabase.from('pt_clientes_enriquecimento').select('*').in('bubble_id', clienteIds),
     ])
 
     if (atividades) {
@@ -35,6 +36,7 @@ export default async function ClientesPage() {
     }
 
     const metaMap = Object.fromEntries((metas ?? []).map((m) => [m.cliente_id, m]))
+    const enriqMap = Object.fromEntries((enriquecimento ?? []).map((e: { bubble_id: string; uf: string; cidade: string }) => [e.bubble_id, e]))
     const ultimaAtividadeMap: Record<string, string | undefined> = {}
     for (const a of (atividades ?? [])) {
       if (!ultimaAtividadeMap[a.cliente_id]) {
@@ -43,8 +45,11 @@ export default async function ClientesPage() {
     }
     clientesFinais = clientes.map((c) => {
       const meta = metaMap[c.id]
+      const enriq = enriqMap[c.id]
       return {
         ...c,
+        uf: enriq?.uf || c.uf,
+        cidade: enriq?.cidade || c.cidade,
         concorrente_atual: meta?.concorrente_atual ?? undefined,
         data_vencimento_contrato: meta?.data_vencimento_contrato ?? undefined,
         proximo_follow_up: ultimaAtividadeMap[c.id] ?? c.proximo_follow_up,

@@ -8,11 +8,12 @@ import { followUpAtrasado, renovacaoProxima, diasAtraso, formatarDataCurta } fro
 import ModalAcaoEmMassa from './ModalAcaoEmMassa'
 
 const STATUS_CORES: Record<string, { bg: string; cor: string }> = {
-  'Novo':        { bg: '#1e293b', cor: '#94a3b8' },
-  'Em contato':  { bg: '#1e2d3b', cor: '#60a5fa' },
-  'Proposta':    { bg: '#2d2a1e', cor: '#fbbf24' },
-  'Convertido':  { bg: '#0d2620', cor: '#09bc8a' },
-  'Perdido':     { bg: '#2d1515', cor: '#ef4444' },
+  'Prospectar cliente':        { bg: '#1e293b', cor: '#94a3b8' },
+  'Solicitar Fatura':          { bg: '#1e2d3b', cor: '#60a5fa' },
+  'Estudo de viabilidade':     { bg: '#2d2a1e', cor: '#fbbf24' },
+  'Apresentação':              { bg: '#2d1e3b', cor: '#c084fc' },
+  'Fechamento de contrato':    { bg: '#1e2d3b', cor: '#38bdf8' },
+  'Processo Migratório':       { bg: '#0d2620', cor: '#09bc8a' },
 }
 
 export default function ListaClientesLateral({
@@ -101,32 +102,18 @@ export default function ListaClientesLateral({
           )}
         </div>
 
-        {/* Filtros linha 1: UF + Cidade */}
-        <div className="flex gap-2">
-          <select
-            value={filtros.uf}
-            onChange={(e) => onFiltroChange('uf', e.target.value)}
-            className="flex-1 px-2 py-1.5 rounded-lg text-xs"
-            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
-          >
-            <option value="">Todas UFs</option>
-            {ufsDisponiveis.map((uf) => (
-              <option key={uf} value={uf}>{uf}</option>
-            ))}
-          </select>
-
-          <select
-            value={filtros.cidade}
-            onChange={(e) => onFiltroChange('cidade', e.target.value)}
-            className="flex-1 px-2 py-1.5 rounded-lg text-xs"
-            style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
-          >
-            <option value="">Todas cidades</option>
-            {cidadesDisponiveis.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
+        {/* Filtro: Região (UF) */}
+        <select
+          value={filtros.uf}
+          onChange={(e) => onFiltroChange('uf', e.target.value)}
+          className="w-full px-2 py-1.5 rounded-lg text-xs"
+          style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+        >
+          <option value="">Todas as regiões</option>
+          {ufsDisponiveis.map((uf) => (
+            <option key={uf} value={uf}>{uf}</option>
+          ))}
+        </select>
 
         {/* Filtros linha 2: Status */}
         <select
@@ -136,11 +123,12 @@ export default function ListaClientesLateral({
           style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
         >
           <option value="">Todos os status</option>
-          <option value="Novo">Novo</option>
-          <option value="Em contato">Em contato</option>
-          <option value="Proposta">Proposta</option>
-          <option value="Convertido">Convertido</option>
-          <option value="Perdido">Perdido</option>
+          <option value="Prospectar cliente">Prospectar cliente</option>
+          <option value="Solicitar Fatura">Solicitar Fatura</option>
+          <option value="Estudo de viabilidade">Estudo de viabilidade</option>
+          <option value="Apresentação">Apresentação</option>
+          <option value="Fechamento de contrato">Fechamento de contrato</option>
+          <option value="Processo Migratório">Processo Migratório</option>
         </select>
 
         {/* Quick filters */}
@@ -261,10 +249,10 @@ export default function ListaClientesLateral({
                     {cliente.razao_social}
                   </span>
 
-                  {/* Cidade + badges */}
+                  {/* Região + badges */}
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {cliente.cidade} · {cliente.uf}
+                      {cliente.uf}
                     </span>
                     {atrasado && (
                       <span

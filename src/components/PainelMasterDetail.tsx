@@ -19,7 +19,6 @@ export default function PainelMasterDetail({
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [filtroUf, setFiltroUf] = useState('')
-  const [filtroCidade, setFiltroCidade] = useState('')
   const [filtroStatus, setFiltroStatus] = useState('')
   const [filtroAtrasado, setFiltroAtrasado] = useState(false)
   const [filtroRenovacao, setFiltroRenovacao] = useState(false)
@@ -29,17 +28,16 @@ export default function PainelMasterDetail({
   const clientesFiltrados = useMemo(() => {
     return clientes.filter((c) => {
       if (filtroUf && c.uf !== filtroUf) return false
-      if (filtroCidade && c.cidade !== filtroCidade) return false
       if (filtroStatus && c.status_atual !== filtroStatus) return false
       if (filtroAtrasado && !followUpAtrasado(c.proximo_follow_up)) return false
       if (filtroRenovacao && !renovacaoProxima(c.data_vencimento_contrato)) return false
       if (busca) {
         const q = busca.toLowerCase()
-        if (!c.razao_social.toLowerCase().includes(q) && !c.cidade.toLowerCase().includes(q)) return false
+        if (!c.razao_social.toLowerCase().includes(q) && !c.uf.toLowerCase().includes(q)) return false
       }
       return true
     })
-  }, [clientes, filtroUf, filtroCidade, filtroStatus, filtroAtrasado, filtroRenovacao, busca])
+  }, [clientes, filtroUf, filtroStatus, filtroAtrasado, filtroRenovacao, busca])
 
   const selectedCliente = selectedId ? clientes.find((c) => c.bubble_id === selectedId) ?? null : null
   const atividades = selectedId ? (atividadesLocais[selectedId] ?? []) : []
@@ -104,10 +102,9 @@ export default function PainelMasterDetail({
         selectedIds={selectedIds}
         onToggleSelect={toggleSelect}
         onToggleSelectAll={toggleSelectAll}
-        filtros={{ uf: filtroUf, cidade: filtroCidade, status: filtroStatus, atrasado: filtroAtrasado, renovacao: filtroRenovacao }}
+        filtros={{ uf: filtroUf, cidade: '', status: filtroStatus, atrasado: filtroAtrasado, renovacao: filtroRenovacao }}
         onFiltroChange={(key, value) => {
-          if (key === 'uf') { setFiltroUf(value as string); setFiltroCidade('') }
-          else if (key === 'cidade') setFiltroCidade(value as string)
+          if (key === 'uf') setFiltroUf(value as string)
           else if (key === 'status') setFiltroStatus(value as string)
           else if (key === 'atrasado') setFiltroAtrasado(value as boolean)
           else if (key === 'renovacao') setFiltroRenovacao(value as boolean)

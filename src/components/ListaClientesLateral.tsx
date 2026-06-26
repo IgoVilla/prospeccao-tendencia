@@ -220,8 +220,8 @@ export default function ListaClientesLateral({
                   border: isSelected
                     ? '1px solid rgba(9,188,138,0.3)'
                     : atrasado
-                    ? '1px solid rgba(251,191,36,0.25)'
-                    : '1px solid transparent',
+                    ? '1px solid rgba(245,158,11,0.4)'
+                    : '1px solid var(--border)',
                 }}
                 onClick={() => onSelect(cliente.bubble_id)}
               >

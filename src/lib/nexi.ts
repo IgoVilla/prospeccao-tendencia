@@ -69,7 +69,7 @@ export async function buscarClientesDoAgente(
     consumo_estimado: c['Consumo Estimado'] as number | undefined,
     status_atual: statusList[i],
     responsavel_id: agenteId,
-    proximo_follow_up: c['Proximo Follow Up'] as string | undefined,
+    proximo_follow_up: c['Proximo Follow Up'] ? String(c['Proximo Follow Up']).slice(0, 10) : undefined,
     concorrente_atual: undefined,
     data_vencimento_contrato: undefined,
   }))

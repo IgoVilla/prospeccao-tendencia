@@ -70,8 +70,8 @@ export async function buscarClientesDoAgente(
     status_atual: statusList[i],
     responsavel_id: agenteId,
     proximo_follow_up: c['Proximo Follow Up'] as string | undefined,
-    concorrente_atual: c['Concorrente'] as string | undefined,
-    data_vencimento_contrato: c['Data Vencimento Contrato'] as string | undefined,
+    concorrente_atual: undefined,
+    data_vencimento_contrato: undefined,
   }))
 }
 

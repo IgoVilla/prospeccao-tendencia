@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Building2, MapPin, Phone, FileText, Users, AlertTriangle } from 'lucide-react'
 import { Cliente, DadosCnpj, Atividade } from '@/types'
 import { createClient } from '@/lib/supabase/client'
@@ -22,22 +22,41 @@ export default function PainelInfoCliente({
   const [concorrente, setConcorrente] = useState(cliente.concorrente_atual ?? '')
   const [dataVencimento, setDataVencimento] = useState(cliente.data_vencimento_contrato ?? '')
   const [salvando, setSalvando] = useState(false)
+  const [salvoOk, setSalvoOk] = useState(false)
+  const [erroMeta, setErroMeta] = useState('')
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isMount = useRef(true)
 
   const dataContrato = dataVencimento || cliente.data_vencimento_contrato
   const alertaRenovacao = renovacaoProxima(dataContrato)
 
-  async function salvarMeta() {
+  async function salvarMeta(c = concorrente, d = dataVencimento) {
     setSalvando(true)
+    setSalvoOk(false)
+    setErroMeta('')
     const supabase = createClient()
-    await supabase.from('pt_clientes_meta').upsert({
+    const { error } = await supabase.from('pt_clientes_meta').upsert({
       cliente_id: cliente.bubble_id,
       agente_id: agenteId,
-      concorrente_atual: concorrente || null,
-      data_vencimento_contrato: dataVencimento || null,
+      concorrente_atual: c || null,
+      data_vencimento_contrato: d || null,
       updated_at: new Date().toISOString(),
     })
     setSalvando(false)
+    if (error) {
+      setErroMeta('Erro ao salvar: ' + error.message)
+    } else {
+      setSalvoOk(true)
+      setTimeout(() => setSalvoOk(false), 2000)
+    }
   }
+
+  useEffect(() => {
+    if (isMount.current) { isMount.current = false; return }
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => salvarMeta(concorrente, dataVencimento), 800)
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [concorrente, dataVencimento])
 
   return (
     <>
@@ -155,7 +174,6 @@ export default function PainelInfoCliente({
               <input
                 value={concorrente}
                 onChange={(e) => setConcorrente(e.target.value)}
-                onBlur={salvarMeta}
                 placeholder="Ex: CPFL, EDP, Celpa..."
                 className="px-3 py-2 rounded-lg text-sm w-full"
                 style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
@@ -167,12 +185,13 @@ export default function PainelInfoCliente({
                 type="date"
                 value={dataVencimento}
                 onChange={(e) => setDataVencimento(e.target.value)}
-                onBlur={salvarMeta}
                 className="px-3 py-2 rounded-lg text-sm w-full"
                 style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
               />
             </div>
             {salvando && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Salvando...</p>}
+            {salvoOk && <p className="text-xs" style={{ color: 'var(--accent)' }}>Salvo ✓</p>}
+            {erroMeta && <p className="text-xs" style={{ color: 'var(--danger)' }}>{erroMeta}</p>}
           </div>
         </div>
 

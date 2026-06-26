@@ -63,7 +63,7 @@ export default function TimelineCliente({
         <div className="relative flex flex-col gap-0">
           {atividades.map((atividade, index) => {
             const tipoConfig = TIPO_CONFIG[atividade.tipo] ?? TIPO_CONFIG.Ligacao
-            const statusConfig = STATUS_CONFIG[atividade.status] ?? STATUS_CONFIG['Nao atendeu']
+            const statusConfig = STATUS_CONFIG[atividade.status ?? 'Nao atendeu'] ?? STATUS_CONFIG['Nao atendeu']
             const ehUltimo = index === atividades.length - 1
 
             return (

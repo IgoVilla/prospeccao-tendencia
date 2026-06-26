@@ -180,7 +180,9 @@ export default function ListaClientes({
                           {cliente.ultimo_contato.tipo}
                         </span>
                         <span>·</span>
-                        <span>{STATUS_LABELS[cliente.ultimo_contato.status] ?? cliente.ultimo_contato.status}</span>
+                        {cliente.ultimo_contato.status && (
+                          <span>{STATUS_LABELS[cliente.ultimo_contato.status] ?? cliente.ultimo_contato.status}</span>
+                        )}
                         <span>·</span>
                         <span>{formatarData(cliente.ultimo_contato.created_at)}</span>
                       </div>

@@ -3,8 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Users, LayoutDashboard, LogOut } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 
 const navItems = [
   { href: '/clientes', label: 'Meus Clientes', icon: Users },
@@ -13,13 +11,6 @@ const navItems = [
 
 export default function Sidebar({ agente }: { agente: { nome: string; email: string } }) {
   const pathname = usePathname()
-  const router = useRouter()
-
-  async function sair() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/')
-  }
 
   return (
     <aside
@@ -78,14 +69,14 @@ export default function Sidebar({ agente }: { agente: { nome: string; email: str
             </p>
           </div>
         </div>
-        <button
-          onClick={sair}
+        <a
+          href="/api/auth/logout"
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:opacity-80"
           style={{ color: 'var(--text-muted)' }}
         >
           <LogOut size={14} />
           Sair
-        </button>
+        </a>
       </div>
     </aside>
   )

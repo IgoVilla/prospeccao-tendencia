@@ -107,7 +107,7 @@ export default function TimelineCliente({
                   {atividade.comentario && (
                     <p
                       className="text-sm leading-relaxed"
-                      style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}
+                      style={{ color: 'var(--text-muted)', fontStyle: 'italic', whiteSpace: 'pre-wrap' }}
                     >
                       "{atividade.comentario}"
                     </p>

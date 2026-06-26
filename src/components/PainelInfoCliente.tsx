@@ -13,12 +13,14 @@ export default function PainelInfoCliente({
   agenteId,
   temHistorico,
   onNovaAtividade,
+  onMetaSalva,
 }: {
   cliente: Cliente & { cidade?: string }
   dadosCnpj: DadosCnpj | null
   agenteId: string
   temHistorico: boolean
   onNovaAtividade?: (atividade: Atividade) => void
+  onMetaSalva?: (concorrente: string, dataVencimento: string) => void
 }) {
   const [modalAberto, setModalAberto] = useState(false)
   const [concorrente, setConcorrente] = useState(cliente.concorrente_atual ?? '')
@@ -50,6 +52,7 @@ export default function PainelInfoCliente({
     } else {
       setSalvoOk(true)
       setTimeout(() => setSalvoOk(false), 2000)
+      onMetaSalva?.(c, d)
     }
   }
 

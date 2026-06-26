@@ -26,9 +26,15 @@ export default function PainelMasterDetail({
   const [filtroRenovacao, setFiltroRenovacao] = useState(false)
   const [busca, setBusca] = useState('')
   const [atividadesLocais, setAtividadesLocais] = useState<Record<string, Atividade[]>>(atividadesPorCliente)
+  const [metaLocais, setMetaLocais] = useState<Record<string, { concorrente_atual?: string; data_vencimento_contrato?: string }>>({})
+
+  const clientesComMeta = useMemo(() =>
+    clientes.map((c) => ({ ...c, ...(metaLocais[c.bubble_id] ?? {}) })),
+    [clientes, metaLocais]
+  )
 
   const clientesFiltrados = useMemo(() => {
-    return clientes.filter((c) => {
+    return clientesComMeta.filter((c) => {
       if (filtroUf && c.uf !== filtroUf) return false
       if (filtroStatus && c.status_atual !== filtroStatus) return false
       if (filtroAtrasado && !followUpAtrasado(c.proximo_follow_up)) return false
@@ -39,9 +45,9 @@ export default function PainelMasterDetail({
       }
       return true
     })
-  }, [clientes, filtroUf, filtroStatus, filtroAtrasado, filtroRenovacao, busca])
+  }, [clientesComMeta, filtroUf, filtroStatus, filtroAtrasado, filtroRenovacao, busca])
 
-  const selectedCliente = selectedId ? clientes.find((c) => c.bubble_id === selectedId) ?? null : null
+  const selectedCliente = selectedId ? clientesComMeta.find((c) => c.bubble_id === selectedId) ?? null : null
   const atividades = selectedId ? (atividadesLocais[selectedId] ?? []) : []
 
   function toggleSelect(id: string) {
@@ -91,7 +97,7 @@ export default function PainelMasterDetail({
     <div className="flex h-full">
       <ListaClientesLateral
         clientes={clientesFiltrados}
-        todosClientes={clientes}
+        todosClientes={clientesComMeta}
         selectedId={selectedId}
         onSelect={setSelectedId}
         selectedIds={selectedIds}
@@ -113,11 +119,18 @@ export default function PainelMasterDetail({
       {selectedCliente ? (
         <div className="flex flex-1 min-w-0">
           <PainelInfoCliente
+            key={selectedCliente.bubble_id}
             cliente={selectedCliente}
             dadosCnpj={null}
             agenteId={agenteId}
             temHistorico={atividades.length > 0}
             onNovaAtividade={(a) => adicionarAtividade(selectedCliente.bubble_id, a)}
+            onMetaSalva={(concorrente, dataVencimento) =>
+              setMetaLocais((prev) => ({
+                ...prev,
+                [selectedCliente.bubble_id]: { concorrente_atual: concorrente, data_vencimento_contrato: dataVencimento },
+              }))
+            }
           />
           <TimelineCliente
             clienteId={selectedCliente.bubble_id}

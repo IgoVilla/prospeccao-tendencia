@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     try { tokenData = JSON.parse(tokenText) } catch { /* not json */ }
 
     access_token = (tokenData.access_token ?? tokenData.token ?? '') as string
-    bubble_user_id = (tokenData.user_id ?? tokenData.userId ?? tokenData.user ?? '') as string
+    bubble_user_id = (tokenData.uid ?? tokenData.user_id ?? tokenData.userId ?? '') as string
 
     if (!access_token || !bubble_user_id) {
       const raw = encodeURIComponent(tokenText.slice(0, 400))

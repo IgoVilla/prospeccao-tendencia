@@ -74,11 +74,18 @@ export async function GET(request: NextRequest) {
     let userData: { response?: Record<string, unknown> } = {}
     try { userData = JSON.parse(userText) } catch { /* not json */ }
     const u = userData?.response ?? {}
-    const keys = encodeURIComponent(JSON.stringify(Object.keys(u)).slice(0, 200))
-    email = ((u['authentication email'] ?? u['Authentication Email'] ?? u.email ?? u.Email ?? '') as string).toLowerCase().trim()
-    nome = (u.Name ?? u.name ?? u['name'] ?? email) as string
+    const auth = u.authentication as Record<string, unknown> | undefined
+    const authEmail = auth?.email as Record<string, unknown> | string | undefined
+    const emailFromAuth = typeof authEmail === 'string'
+      ? authEmail
+      : typeof authEmail === 'object' && authEmail !== null
+        ? (authEmail.email as string | undefined) ?? ''
+        : ''
+    email = ((u['authentication email'] ?? u['Authentication Email'] ?? u.email ?? u.Email ?? emailFromAuth ?? '') as string).toLowerCase().trim()
+    nome = ((u.Nome ?? u.Sobrenome ? `${u.Nome ?? ''} ${u.Sobrenome ?? ''}`.trim() : '') || u.Name ?? u.name ?? email) as string
     if (!email) {
-      return NextResponse.redirect(`${APP_URL}/?erro=agente_nao_encontrado&keys=${keys}`)
+      const debugAuth = encodeURIComponent(JSON.stringify(auth).slice(0, 300))
+      return NextResponse.redirect(`${APP_URL}/?erro=sem_email&auth=${debugAuth}`)
     }
   } catch (err) {
     return NextResponse.redirect(`${APP_URL}/?erro=agente_nao_encontrado&detail=${encodeURIComponent(String(err))}`)

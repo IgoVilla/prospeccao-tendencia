@@ -40,24 +40,46 @@ async function buscarDadosTarefa(
 
   const status = String(results[0]?.['Titulo'] ?? 'Prospectar cliente')
 
-  const comentarios: Atividade[] = []
+  // Coleta todos os IDs de comentários de todas as tarefas
+  const allCommentIds: string[] = []
   for (const task of results) {
     const field = task['Comentarios']
     if (!field) continue
     const lista = Array.isArray(field) ? field : [field]
-    lista.forEach((item, idx) => {
-      const texto = (typeof item === 'string' ? item : String(item?.Texto ?? item?.texto ?? item?.text ?? '')).trim()
-      if (!texto) return
-      comentarios.push({
-        id: `bubble-${String(task._id)}-${idx}`,
+    for (const item of lista) {
+      const id = typeof item === 'string' ? item.trim() : ''
+      if (id) allCommentIds.push(id)
+    }
+  }
+
+  if (allCommentIds.length === 0) return { status, comentarios: [] }
+
+  // Busca os objetos Comentario em lote
+  const commentConstraints = encodeURIComponent(
+    JSON.stringify([{ key: '_id', constraint_type: 'in', value: allCommentIds }])
+  )
+  const commentJson = await bubbleFetch(
+    `/obj/Comentario?constraints=${commentConstraints}&limit=100`,
+    token
+  )
+  const commentResults: Record<string, unknown>[] = commentJson?.response?.results ?? []
+
+  const comentarios = commentResults
+    .map((c, idx) => {
+      const texto = String(c['Texto'] ?? '').trim()
+      const autor = extrairString(c['UserComment'])
+      const displayText = autor ? `${autor}: ${texto}` : texto
+      if (!displayText) return null
+      return {
+        id: `bubble-${String(c._id)}-${idx}`,
         agente_id: '',
         cliente_id: clienteId,
-        tipo: 'ComentarioNexi',
-        comentario: texto,
-        created_at: String(task['Created Date'] ?? new Date().toISOString()),
-      })
+        tipo: 'ComentarioNexi' as const,
+        comentario: displayText,
+        created_at: String(c['Created Date'] ?? new Date().toISOString()),
+      }
     })
-  }
+    .filter((c) => c !== null) as Atividade[]
 
   return { status, comentarios }
 }

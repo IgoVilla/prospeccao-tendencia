@@ -64,21 +64,24 @@ export async function GET(request: NextRequest) {
   let nome = ''
   try {
     const userRes = await undiciFetch(
-      `https://nexiplay.com/api/1.1/obj/User/${bubble_user_id}`,
+      `https://nexiplay.com/api/1.1/obj/user/${bubble_user_id}`,
       { headers: { Authorization: `Bearer ${access_token}` }, dispatcher: nexiAgent }
     )
-    if (userRes.ok) {
-      const userData = await userRes.json() as { response?: Record<string, unknown> }
-      const u = userData?.response ?? {}
-      email = ((u['authentication email'] ?? u.email ?? '') as string).toLowerCase().trim()
-      nome = (u.Name ?? u.name ?? email) as string
+    const userText = await userRes.text()
+    if (!userRes.ok || !userText) {
+      return NextResponse.redirect(`${APP_URL}/?erro=agente_nao_encontrado&detail=${encodeURIComponent(userRes.status + ':' + userText.slice(0, 300))}`)
+    }
+    let userData: { response?: Record<string, unknown> } = {}
+    try { userData = JSON.parse(userText) } catch { /* not json */ }
+    const u = userData?.response ?? {}
+    const keys = encodeURIComponent(JSON.stringify(Object.keys(u)).slice(0, 200))
+    email = ((u['authentication email'] ?? u['Authentication Email'] ?? u.email ?? u.Email ?? '') as string).toLowerCase().trim()
+    nome = (u.Name ?? u.name ?? u['name'] ?? email) as string
+    if (!email) {
+      return NextResponse.redirect(`${APP_URL}/?erro=agente_nao_encontrado&keys=${keys}`)
     }
   } catch (err) {
-    console.error('[callback] busca de usuário Bubble falhou:', err)
-  }
-
-  if (!email) {
-    return NextResponse.redirect(`${APP_URL}/?erro=agente_nao_encontrado`)
+    return NextResponse.redirect(`${APP_URL}/?erro=agente_nao_encontrado&detail=${encodeURIComponent(String(err))}`)
   }
 
   // 3. Senha derivada determinística para o Supabase

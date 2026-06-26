@@ -24,6 +24,7 @@ export default function PainelMasterDetail({
   const [filtroStatus, setFiltroStatus] = useState('')
   const [filtroAtrasado, setFiltroAtrasado] = useState(false)
   const [filtroRenovacao, setFiltroRenovacao] = useState(false)
+  const [filtroUltimoStatus, setFiltroUltimoStatus] = useState('')
   const [busca, setBusca] = useState('')
   const [atividadesLocais, setAtividadesLocais] = useState<Record<string, Atividade[]>>(atividadesPorCliente)
   const [metaLocais, setMetaLocais] = useState<Record<string, { concorrente_atual?: string; data_vencimento_contrato?: string; proximo_follow_up?: string }>>({})
@@ -33,10 +34,19 @@ export default function PainelMasterDetail({
     [clientes, metaLocais]
   )
 
+  const ultimoStatusMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const [id, ativs] of Object.entries(atividadesLocais)) {
+      if (ativs.length > 0) map[id] = ativs[0].status
+    }
+    return map
+  }, [atividadesLocais])
+
   const clientesFiltrados = useMemo(() => {
     return clientesComMeta.filter((c) => {
       if (filtroUf && c.uf !== filtroUf) return false
       if (filtroStatus && c.status_atual !== filtroStatus) return false
+      if (filtroUltimoStatus && ultimoStatusMap[c.bubble_id] !== filtroUltimoStatus) return false
       if (filtroAtrasado && !followUpAtrasado(c.proximo_follow_up)) return false
       if (filtroRenovacao && !renovacaoProxima(c.data_vencimento_contrato)) return false
       if (busca) {
@@ -45,7 +55,7 @@ export default function PainelMasterDetail({
       }
       return true
     })
-  }, [clientesComMeta, filtroUf, filtroStatus, filtroAtrasado, filtroRenovacao, busca])
+  }, [clientesComMeta, filtroUf, filtroStatus, filtroUltimoStatus, ultimoStatusMap, filtroAtrasado, filtroRenovacao, busca])
 
   const selectedCliente = selectedId ? clientesComMeta.find((c) => c.bubble_id === selectedId) ?? null : null
   const atividades = selectedId ? (atividadesLocais[selectedId] ?? []) : []
@@ -118,10 +128,11 @@ export default function PainelMasterDetail({
         selectedIds={selectedIds}
         onToggleSelect={toggleSelect}
         onToggleSelectAll={toggleSelectAll}
-        filtros={{ uf: filtroUf, cidade: '', status: filtroStatus, atrasado: filtroAtrasado, renovacao: filtroRenovacao }}
+        filtros={{ uf: filtroUf, cidade: '', status: filtroStatus, ultimoStatus: filtroUltimoStatus, atrasado: filtroAtrasado, renovacao: filtroRenovacao }}
         onFiltroChange={(key, value) => {
           if (key === 'uf') setFiltroUf(value as string)
           else if (key === 'status') setFiltroStatus(value as string)
+          else if (key === 'ultimoStatus') setFiltroUltimoStatus(value as string)
           else if (key === 'atrasado') setFiltroAtrasado(value as boolean)
           else if (key === 'renovacao') setFiltroRenovacao(value as boolean)
         }}

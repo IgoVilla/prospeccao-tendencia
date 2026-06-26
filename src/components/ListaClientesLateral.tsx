@@ -38,7 +38,7 @@ export default function ListaClientesLateral({
   selectedIds: Set<string>
   onToggleSelect: (id: string) => void
   onToggleSelectAll: (ids: string[]) => void
-  filtros: { uf: string; cidade: string; status: string; atrasado: boolean; renovacao: boolean }
+  filtros: { uf: string; cidade: string; status: string; ultimoStatus: string; atrasado: boolean; renovacao: boolean }
   onFiltroChange: (key: string, value: string | boolean) => void
   busca: string
   onBuscaChange: (v: string) => void
@@ -66,12 +66,13 @@ export default function ListaClientesLateral({
     .map((id) => todosClientes.find((c) => c.bubble_id === id)?.razao_social ?? '')
     .filter(Boolean)
 
-  const hayFiltrosAtivos = filtros.uf || filtros.cidade || filtros.status || filtros.atrasado || filtros.renovacao || busca
+  const hayFiltrosAtivos = filtros.uf || filtros.cidade || filtros.status || filtros.ultimoStatus || filtros.atrasado || filtros.renovacao || busca
 
   function limparFiltros() {
     onFiltroChange('uf', '')
     onFiltroChange('cidade', '')
     onFiltroChange('status', '')
+    onFiltroChange('ultimoStatus', '')
     onFiltroChange('atrasado', false)
     onFiltroChange('renovacao', false)
     onBuscaChange('')
@@ -117,20 +118,34 @@ export default function ListaClientesLateral({
           ))}
         </select>
 
-        {/* Filtros linha 2: Status */}
+        {/* Filtro: Etapa */}
         <select
           value={filtros.status}
           onChange={(e) => onFiltroChange('status', e.target.value)}
           className="w-full px-2 py-1.5 rounded-lg text-xs"
           style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
         >
-          <option value="">Todos os status</option>
+          <option value="">Todas as Etapas</option>
           <option value="Prospectar cliente">Prospectar cliente</option>
           <option value="Solicitar Fatura">Solicitar Fatura</option>
           <option value="Estudo de viabilidade">Estudo de viabilidade</option>
           <option value="Apresentação">Apresentação</option>
           <option value="Fechamento de contrato">Fechamento de contrato</option>
           <option value="Processo Migratório">Processo Migratório</option>
+        </select>
+
+        {/* Filtro: Último status de contato */}
+        <select
+          value={filtros.ultimoStatus}
+          onChange={(e) => onFiltroChange('ultimoStatus', e.target.value)}
+          className="w-full px-2 py-1.5 rounded-lg text-xs"
+          style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+        >
+          <option value="">Todos os Status</option>
+          <option value="Atendeu">Atendeu</option>
+          <option value="Nao atendeu">Não atendeu</option>
+          <option value="Agendou">Agendou retorno</option>
+          <option value="Recusou">Recusou</option>
         </select>
 
         {/* Quick filters */}

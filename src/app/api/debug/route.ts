@@ -23,25 +23,13 @@ export async function GET(request: NextRequest) {
   ])
   const res = await fetch(
     `https://nexiplay.com/api/1.1/obj/Cliente?constraints=${encodeURIComponent(constraints)}&limit=20`,
-    { headers: { Authorization: `Bearer ${token}` } }
+    { headers: { Authorization: `Bearer ${token}`, 'Cache-Control': 'no-cache' }, cache: 'no-store' }
   )
   const json = await res.json()
   const results: Record<string, unknown>[] = json?.response?.results ?? []
 
-  // Collect all unique keys across all clients
-  const allKeys = [...new Set(results.flatMap((c) => Object.keys(c)))].sort()
-
-  // Find clients that have any UF-related field
-  const clientesComUF = results
-    .filter((c) => Object.keys(c).some((k) => k.toLowerCase().includes('uf') || k.toLowerCase().includes('regi')))
-    .map((c) => {
-      const ufKeys = Object.keys(c).filter((k) => k.toLowerCase().includes('uf') || k.toLowerCase().includes('regi'))
-      return { _id: c._id, Nome: c['Nome'], ufFields: Object.fromEntries(ufKeys.map((k) => [k, c[k]])) }
-    })
-
   return NextResponse.json({
     totalClientes: results.length,
-    allKeys,
-    clientesComUF,
+    clientes: results,
   })
 }

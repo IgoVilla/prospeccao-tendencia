@@ -19,11 +19,13 @@ const STATUS_LABELS: Record<string, string> = {
 export default function ModalAcaoEmMassa({
   idsClientes,
   clientes,
+  agenteId,
   onSalvar,
   onFechar,
 }: {
   idsClientes: string[]
   clientes: ClienteComCidade[]
+  agenteId: string
   onSalvar: (base: Omit<Atividade, 'id' | 'created_at' | 'cliente_id'>) => void
   onFechar: () => void
 }) {
@@ -40,7 +42,7 @@ export default function ModalAcaoEmMassa({
   function salvar(e: React.FormEvent) {
     e.preventDefault()
     onSalvar({
-      agente_id: 'agente-mock',
+      agente_id: agenteId,
       tipo: tipo as Atividade['tipo'],
       status: status as Atividade['status'],
       comentario: comentario || undefined,

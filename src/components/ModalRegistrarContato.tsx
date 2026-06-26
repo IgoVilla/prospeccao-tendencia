@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { proximoFollowUp } from '@/lib/utils'
@@ -28,7 +27,6 @@ export default function ModalRegistrarContato({
   onFechar: () => void
   onNovaAtividade?: (atividade: Atividade) => void
 }) {
-  const router = useRouter()
   const [tipo, setTipo] = useState<string>('Ligacao')
   const [status, setStatus] = useState<string>('Atendeu')
   const [comentario, setComentario] = useState('')
@@ -41,32 +39,19 @@ export default function ModalRegistrarContato({
     setSalvando(true)
     setErro('')
 
-    const nova: Atividade = {
-      id: `local-${Date.now()}`,
-      agente_id: agenteId,
-      cliente_id: clienteId,
-      tipo: tipo as Atividade['tipo'],
-      status: status as Atividade['status'],
-      comentario: comentario || undefined,
-      follow_up_data: followUp || undefined,
-      created_at: new Date().toISOString(),
-    }
-
-    if (onNovaAtividade) {
-      onNovaAtividade(nova)
-      onFechar()
-      return
-    }
-
     const supabase = createClient()
-    const { error } = await supabase.from('pt_atividades').insert({
-      agente_id: agenteId,
-      cliente_id: clienteId,
-      tipo,
-      status,
-      comentario: comentario || null,
-      follow_up_data: followUp || null,
-    })
+    const { data, error } = await supabase
+      .from('pt_atividades')
+      .insert({
+        agente_id: agenteId,
+        cliente_id: clienteId,
+        tipo,
+        status,
+        comentario: comentario || null,
+        follow_up_data: followUp || null,
+      })
+      .select()
+      .single()
 
     if (error) {
       setErro('Erro ao salvar. Tente novamente.')
@@ -74,7 +59,10 @@ export default function ModalRegistrarContato({
       return
     }
 
-    router.refresh()
+    if (onNovaAtividade && data) {
+      onNovaAtividade(data as Atividade)
+    }
+
     onFechar()
   }
 

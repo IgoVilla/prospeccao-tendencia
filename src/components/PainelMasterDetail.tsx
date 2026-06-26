@@ -12,9 +12,11 @@ import { Users } from 'lucide-react'
 export default function PainelMasterDetail({
   clientes,
   atividadesPorCliente,
+  agenteId,
 }: {
   clientes: ClienteComCidade[]
   atividadesPorCliente: Record<string, Atividade[]>
+  agenteId: string
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -111,6 +113,7 @@ export default function PainelMasterDetail({
         }}
         busca={busca}
         onBuscaChange={setBusca}
+        agenteId={agenteId}
         onAcaoEmMassa={adicionarAtividadeEmMassa}
       />
 
@@ -119,13 +122,13 @@ export default function PainelMasterDetail({
           <PainelInfoCliente
             cliente={selectedCliente}
             dadosCnpj={null}
-            agenteId="agente-mock"
+            agenteId={agenteId}
             onNovaAtividade={(a) => adicionarAtividade(selectedCliente.bubble_id, a)}
           />
           <TimelineCliente
             clienteId={selectedCliente.bubble_id}
             atividades={atividades}
-            agenteId="agente-mock"
+            agenteId={agenteId}
             onNovaAtividade={(a) => adicionarAtividade(selectedCliente.bubble_id, a)}
           />
         </div>

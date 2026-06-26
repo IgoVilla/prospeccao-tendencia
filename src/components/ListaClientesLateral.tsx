@@ -28,6 +28,7 @@ export default function ListaClientesLateral({
   onFiltroChange,
   busca,
   onBuscaChange,
+  agenteId,
   onAcaoEmMassa,
 }: {
   clientes: ClienteComCidade[]
@@ -41,6 +42,7 @@ export default function ListaClientesLateral({
   onFiltroChange: (key: string, value: string | boolean) => void
   busca: string
   onBuscaChange: (v: string) => void
+  agenteId: string
   onAcaoEmMassa: (ids: string[], base: Omit<Atividade, 'id' | 'created_at' | 'cliente_id'>) => void
 }) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
@@ -319,6 +321,7 @@ export default function ListaClientesLateral({
         <ModalAcaoEmMassa
           idsClientes={[...selectedIds]}
           clientes={todosClientes}
+          agenteId={agenteId}
           onSalvar={(base) => {
             onAcaoEmMassa([...selectedIds], base)
             setModalMassaAberto(false)

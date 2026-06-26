@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { buscarClientesDoAgente } from '@/lib/nexi'
+import { Atividade } from '@/types'
 import PainelMasterDetail from '@/components/PainelMasterDetail'
 
 export default async function ClientesPage() {
@@ -15,11 +16,31 @@ export default async function ClientesPage() {
     ? await buscarClientesDoAgente(bubbleId, bubbleToken)
     : []
 
+  let atividadesPorCliente: Record<string, Atividade[]> = {}
+  if (clientes.length > 0) {
+    const clienteIds = clientes.map((c) => c.id)
+    const { data } = await supabase
+      .from('pt_atividades')
+      .select('*')
+      .in('cliente_id', clienteIds)
+      .order('created_at', { ascending: false })
+
+    if (data) {
+      for (const a of data) {
+        if (!atividadesPorCliente[a.cliente_id]) {
+          atividadesPorCliente[a.cliente_id] = []
+        }
+        atividadesPorCliente[a.cliente_id].push(a as Atividade)
+      }
+    }
+  }
+
   return (
     <div className="h-full">
       <PainelMasterDetail
         clientes={clientes}
-        atividadesPorCliente={{}}
+        atividadesPorCliente={atividadesPorCliente}
+        agenteId={bubbleId ?? ''}
       />
     </div>
   )

@@ -54,7 +54,7 @@ export default function ModalRegistrarContato({
       .single()
 
     if (error) {
-      setErro(`${error.code}: ${error.message}`)
+      setErro('Erro ao salvar. Tente novamente.')
       setSalvando(false)
       return
     }

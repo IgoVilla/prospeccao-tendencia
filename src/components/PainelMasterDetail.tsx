@@ -77,19 +77,12 @@ export default function PainelMasterDetail({
     }))
   }
 
-  function adicionarAtividadeEmMassa(ids: string[], base: Omit<Atividade, 'id' | 'created_at' | 'cliente_id'>) {
-    const agora = new Date().toISOString()
+  function adicionarAtividadeEmMassa(ids: string[], atividades: Atividade[]) {
     setAtividadesLocais((prev) => {
       const next = { ...prev }
-      ids.forEach((clienteId) => {
-        const nova: Atividade = {
-          ...base,
-          id: `local-${clienteId}-${Date.now()}`,
-          cliente_id: clienteId,
-          created_at: agora,
-        }
-        next[clienteId] = [nova, ...(next[clienteId] ?? [])]
-      })
+      for (const a of atividades) {
+        next[a.cliente_id] = [a, ...(next[a.cliente_id] ?? [])]
+      }
       return next
     })
   }
@@ -114,7 +107,7 @@ export default function PainelMasterDetail({
         busca={busca}
         onBuscaChange={setBusca}
         agenteId={agenteId}
-        onAcaoEmMassa={adicionarAtividadeEmMassa}
+        onAcaoEmMassa={(ids, atividades) => adicionarAtividadeEmMassa(ids, atividades)}
       />
 
       {selectedCliente ? (

@@ -43,7 +43,7 @@ export default function ListaClientesLateral({
   busca: string
   onBuscaChange: (v: string) => void
   agenteId: string
-  onAcaoEmMassa: (ids: string[], base: Omit<Atividade, 'id' | 'created_at' | 'cliente_id'>) => void
+  onAcaoEmMassa: (ids: string[], atividades: Atividade[]) => void
 }) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [modalMassaAberto, setModalMassaAberto] = useState(false)
@@ -322,8 +322,8 @@ export default function ListaClientesLateral({
           idsClientes={[...selectedIds]}
           clientes={todosClientes}
           agenteId={agenteId}
-          onSalvar={(base) => {
-            onAcaoEmMassa([...selectedIds], base)
+          onSalvar={(ids, atividades) => {
+            onAcaoEmMassa(ids, atividades)
             setModalMassaAberto(false)
           }}
           onFechar={() => setModalMassaAberto(false)}

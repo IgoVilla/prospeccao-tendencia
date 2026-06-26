@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { X, Users } from 'lucide-react'
 import { Atividade } from '@/types'
 import { ClienteComCidade } from '@/lib/nexi'
+import { createClient } from '@/lib/supabase/client'
 import { proximoFollowUp } from '@/lib/utils'
 
 const TIPOS = ['Ligacao', 'Email', 'Reuniao', 'Proposta', 'Declinio'] as const
@@ -26,28 +27,49 @@ export default function ModalAcaoEmMassa({
   idsClientes: string[]
   clientes: ClienteComCidade[]
   agenteId: string
-  onSalvar: (base: Omit<Atividade, 'id' | 'created_at' | 'cliente_id'>) => void
+  onSalvar: (ids: string[], atividades: Atividade[]) => void
   onFechar: () => void
 }) {
   const [tipo, setTipo] = useState<string>('Ligacao')
   const [status, setStatus] = useState<string>('Atendeu')
   const [comentario, setComentario] = useState('')
   const [followUp, setFollowUp] = useState(proximoFollowUp())
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
 
   const nomes = idsClientes
     .map((id) => clientes.find((c) => c.bubble_id === id)?.razao_social ?? id)
     .slice(0, 3)
   const extras = idsClientes.length - 3
 
-  function salvar(e: React.FormEvent) {
+  async function salvar(e: React.FormEvent) {
     e.preventDefault()
-    onSalvar({
+    setSalvando(true)
+    setErro('')
+
+    const supabase = createClient()
+    const rows = idsClientes.map((clienteId) => ({
       agente_id: agenteId,
-      tipo: tipo as Atividade['tipo'],
-      status: status as Atividade['status'],
-      comentario: comentario || undefined,
-      follow_up_data: followUp || undefined,
-    })
+      cliente_id: clienteId,
+      tipo,
+      status,
+      comentario: comentario || null,
+      follow_up_data: followUp || null,
+    }))
+
+    const { data, error } = await supabase
+      .from('pt_atividades')
+      .insert(rows)
+      .select()
+
+    if (error) {
+      setErro('Erro ao salvar. Tente novamente.')
+      setSalvando(false)
+      return
+    }
+
+    onSalvar(idsClientes, (data ?? []) as Atividade[])
+    onFechar()
   }
 
   return (
@@ -142,6 +164,8 @@ export default function ModalAcaoEmMassa({
             />
           </div>
 
+          {erro && <p className="text-xs" style={{ color: 'var(--danger)' }}>{erro}</p>}
+
           <div className="flex gap-3 pt-1">
             <button
               type="button"
@@ -153,10 +177,11 @@ export default function ModalAcaoEmMassa({
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90"
+              disabled={salvando}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50"
               style={{ background: 'var(--accent)', color: '#15161b' }}
             >
-              Registrar para {idsClientes.length}
+              {salvando ? 'Salvando...' : `Registrar para ${idsClientes.length}`}
             </button>
           </div>
         </form>

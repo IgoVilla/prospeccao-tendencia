@@ -64,12 +64,33 @@ async function buscarDadosTarefa(
   )
   const commentResults: Record<string, unknown>[] = commentJson?.response?.results ?? []
 
+  // Busca nomes dos usuários em lote
+  const userIds = [...new Set(
+    commentResults.map((c) => String(c['UserComment'] ?? '')).filter(Boolean)
+  )]
+  const userMap: Record<string, string> = {}
+  if (userIds.length > 0) {
+    const userConstraints = encodeURIComponent(
+      JSON.stringify([{ key: '_id', constraint_type: 'in', value: userIds }])
+    )
+    const userJson = await bubbleFetch(
+      `/obj/User?constraints=${userConstraints}&limit=100`,
+      token
+    )
+    const userResults: Record<string, unknown>[] = userJson?.response?.results ?? []
+    for (const u of userResults) {
+      const nome = String(u['Name'] ?? u['Full Name'] ?? u['Nome'] ?? u['email'] ?? '')
+      if (nome) userMap[String(u._id)] = nome
+    }
+  }
+
   const comentarios = commentResults
     .map((c, idx) => {
       const texto = String(c['Texto'] ?? '').trim()
-      const autor = extrairString(c['UserComment'])
+      if (!texto) return null
+      const userId = String(c['UserComment'] ?? '')
+      const autor = userMap[userId] ?? ''
       const displayText = autor ? `${autor}: ${texto}` : texto
-      if (!displayText) return null
       return {
         id: `bubble-${String(c._id)}-${idx}`,
         agente_id: '',

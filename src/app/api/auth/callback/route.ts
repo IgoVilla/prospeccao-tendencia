@@ -39,21 +39,24 @@ export async function GET(request: NextRequest) {
       dispatcher: nexiAgent,
     })
 
+    const tokenText = await tokenRes.text()
+    console.error('[callback] token response:', tokenRes.status, tokenText)
     if (!tokenRes.ok) {
-      console.error('[callback] token exchange falhou:', tokenRes.status, await tokenRes.text())
-      return NextResponse.redirect(`${APP_URL}/?erro=token_invalido`)
+      const detail = encodeURIComponent(tokenRes.status + ':' + tokenText.slice(0, 200))
+      return NextResponse.redirect(`${APP_URL}/?erro=token_invalido&detail=${detail}`)
     }
 
-    const tokenData = await tokenRes.json() as { access_token?: string; user_id?: string }
-    access_token = tokenData.access_token ?? ''
-    bubble_user_id = tokenData.user_id ?? ''
+    const tokenData = JSON.parse(tokenText) as Record<string, unknown>
+    console.error('[callback] token data keys:', Object.keys(tokenData))
+    access_token = (tokenData.access_token ?? tokenData.token ?? '') as string
+    bubble_user_id = (tokenData.user_id ?? tokenData.userId ?? tokenData.user ?? '') as string
   } catch (err) {
     console.error('[callback] conexão com Bubble falhou:', err)
-    return NextResponse.redirect(`${APP_URL}/?erro=conexao_falhou`)
+    return NextResponse.redirect(`${APP_URL}/?erro=conexao_falhou&detail=${encodeURIComponent(String(err))}`)
   }
 
   if (!access_token || !bubble_user_id) {
-    return NextResponse.redirect(`${APP_URL}/?erro=token_invalido`)
+    return NextResponse.redirect(`${APP_URL}/?erro=token_invalido&detail=sem_token_ou_userid`)
   }
 
   // 2. Buscar dados do usuário no Bubble

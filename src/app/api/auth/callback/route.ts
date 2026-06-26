@@ -41,8 +41,7 @@ export async function GET(request: NextRequest) {
 
     const tokenText = await tokenRes.text()
     if (!tokenRes.ok) {
-      const detail = encodeURIComponent(tokenRes.status + ':' + tokenText.slice(0, 300))
-      return NextResponse.redirect(`${APP_URL}/?erro=token_invalido&detail=${detail}`)
+      return NextResponse.redirect(`${APP_URL}/?erro=sessao_falhou`)
     }
 
     let tokenData: Record<string, unknown> = {}
@@ -52,11 +51,10 @@ export async function GET(request: NextRequest) {
     bubble_user_id = (tokenData.uid ?? tokenData.user_id ?? tokenData.userId ?? '') as string
 
     if (!access_token || !bubble_user_id) {
-      const raw = encodeURIComponent(tokenText.slice(0, 400))
-      return NextResponse.redirect(`${APP_URL}/?erro=token_invalido&detail=${raw}`)
+      return NextResponse.redirect(`${APP_URL}/?erro=sessao_falhou`)
     }
-  } catch (err) {
-    return NextResponse.redirect(`${APP_URL}/?erro=conexao_falhou&detail=${encodeURIComponent(String(err))}`)
+  } catch {
+    return NextResponse.redirect(`${APP_URL}/?erro=sessao_falhou`)
   }
 
   // 2. Buscar dados do usuário no Bubble
@@ -69,7 +67,7 @@ export async function GET(request: NextRequest) {
     )
     const userText = await userRes.text()
     if (!userRes.ok || !userText) {
-      return NextResponse.redirect(`${APP_URL}/?erro=agente_nao_encontrado&detail=${encodeURIComponent(userRes.status + ':' + userText.slice(0, 300))}`)
+      return NextResponse.redirect(`${APP_URL}/?erro=sessao_falhou`)
     }
     let userData: { response?: Record<string, unknown> } = {}
     try { userData = JSON.parse(userText) } catch { /* not json */ }
@@ -88,11 +86,10 @@ export async function GET(request: NextRequest) {
     const nomeLast = u.Sobrenome ? String(u.Sobrenome) : ''
     nome = (nomeFirst + (nomeLast ? ' ' + nomeLast : '')).trim() || String(u.Name ?? u.name ?? email)
     if (!email) {
-      const debugAuth = encodeURIComponent(JSON.stringify(auth).slice(0, 300))
-      return NextResponse.redirect(`${APP_URL}/?erro=sem_email&auth=${debugAuth}`)
+      return NextResponse.redirect(`${APP_URL}/?erro=sessao_falhou`)
     }
-  } catch (err) {
-    return NextResponse.redirect(`${APP_URL}/?erro=agente_nao_encontrado&detail=${encodeURIComponent(String(err))}`)
+  } catch {
+    return NextResponse.redirect(`${APP_URL}/?erro=sessao_falhou`)
   }
 
   // 3. Senha derivada determinística para o Supabase

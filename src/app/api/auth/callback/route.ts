@@ -40,23 +40,23 @@ export async function GET(request: NextRequest) {
     })
 
     const tokenText = await tokenRes.text()
-    console.error('[callback] token response:', tokenRes.status, tokenText)
     if (!tokenRes.ok) {
-      const detail = encodeURIComponent(tokenRes.status + ':' + tokenText.slice(0, 200))
+      const detail = encodeURIComponent(tokenRes.status + ':' + tokenText.slice(0, 300))
       return NextResponse.redirect(`${APP_URL}/?erro=token_invalido&detail=${detail}`)
     }
 
-    const tokenData = JSON.parse(tokenText) as Record<string, unknown>
-    console.error('[callback] token data keys:', Object.keys(tokenData))
+    let tokenData: Record<string, unknown> = {}
+    try { tokenData = JSON.parse(tokenText) } catch { /* not json */ }
+
     access_token = (tokenData.access_token ?? tokenData.token ?? '') as string
     bubble_user_id = (tokenData.user_id ?? tokenData.userId ?? tokenData.user ?? '') as string
-  } catch (err) {
-    console.error('[callback] conexão com Bubble falhou:', err)
-    return NextResponse.redirect(`${APP_URL}/?erro=conexao_falhou&detail=${encodeURIComponent(String(err))}`)
-  }
 
-  if (!access_token || !bubble_user_id) {
-    return NextResponse.redirect(`${APP_URL}/?erro=token_invalido&detail=sem_token_ou_userid`)
+    if (!access_token || !bubble_user_id) {
+      const raw = encodeURIComponent(tokenText.slice(0, 400))
+      return NextResponse.redirect(`${APP_URL}/?erro=token_invalido&detail=${raw}`)
+    }
+  } catch (err) {
+    return NextResponse.redirect(`${APP_URL}/?erro=conexao_falhou&detail=${encodeURIComponent(String(err))}`)
   }
 
   // 2. Buscar dados do usuário no Bubble

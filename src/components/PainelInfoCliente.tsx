@@ -11,11 +11,13 @@ export default function PainelInfoCliente({
   cliente,
   dadosCnpj,
   agenteId,
+  temHistorico,
   onNovaAtividade,
 }: {
   cliente: Cliente & { cidade?: string }
   dadosCnpj: DadosCnpj | null
   agenteId: string
+  temHistorico: boolean
   onNovaAtividade?: (atividade: Atividade) => void
 }) {
   const [modalAberto, setModalAberto] = useState(false)
@@ -195,14 +197,16 @@ export default function PainelInfoCliente({
           </div>
         </div>
 
-        {/* Botão registrar */}
-        <button
-          onClick={() => setModalAberto(true)}
-          className="w-full py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-95 mt-auto"
-          style={{ background: 'var(--accent)', color: '#15161b' }}
-        >
-          Registrar Contato
-        </button>
+        {/* Botão registrar — só aparece quando já tem histórico (sem histórico a Timeline já tem o CTA) */}
+        {temHistorico && (
+          <button
+            onClick={() => setModalAberto(true)}
+            className="w-full py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-95 mt-auto"
+            style={{ background: 'var(--accent)', color: '#15161b' }}
+          >
+            Registrar Contato
+          </button>
+        )}
       </aside>
 
       {modalAberto && (

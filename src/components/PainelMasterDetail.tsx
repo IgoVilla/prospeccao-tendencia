@@ -116,6 +116,7 @@ export default function PainelMasterDetail({
             cliente={selectedCliente}
             dadosCnpj={null}
             agenteId={agenteId}
+            temHistorico={atividades.length > 0}
             onNovaAtividade={(a) => adicionarAtividade(selectedCliente.bubble_id, a)}
           />
           <TimelineCliente

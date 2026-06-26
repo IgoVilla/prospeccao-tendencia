@@ -36,7 +36,7 @@ export default async function PainelPage() {
       concorrente_atual: meta?.concorrente_atual,
       data_vencimento_contrato: meta?.data_vencimento_contrato,
       ultimo_contato: atividade,
-      proximo_follow_up: atividade?.follow_up_data,
+      proximo_follow_up: atividade?.follow_up_data ?? c.proximo_follow_up,
     }
   })
 

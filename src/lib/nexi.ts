@@ -42,24 +42,35 @@ export async function buscarClientesDoAgente(
   agenteId: string,
   tokenBubble: string
 ): Promise<ClienteComCidade[]> {
-  const constraints = JSON.stringify([
+  const constraints = encodeURIComponent(JSON.stringify([
     { key: 'Responsavel', constraint_type: 'equals', value: agenteId },
-  ])
+  ]))
 
-  const json = await bubbleFetch(
-    `/obj/Cliente?constraints=${encodeURIComponent(constraints)}&limit=100`,
-    tokenBubble
-  )
-  if (!json) return []
+  const todosResults: Record<string, unknown>[] = []
+  let cursor = 0
 
-  const results: Record<string, unknown>[] = json?.response?.results ?? []
-  if (results.length === 0) return []
+  while (true) {
+    const json = await bubbleFetch(
+      `/obj/Cliente?constraints=${constraints}&limit=100&cursor=${cursor}`,
+      tokenBubble
+    )
+    if (!json) break
+
+    const results: Record<string, unknown>[] = json?.response?.results ?? []
+    todosResults.push(...results)
+
+    const remaining: number = json?.response?.remaining ?? 0
+    if (remaining === 0) break
+    cursor += results.length
+  }
+
+  if (todosResults.length === 0) return []
 
   const statusList = await Promise.all(
-    results.map((c) => buscarStatusDoCliente(c._id as string, tokenBubble))
+    todosResults.map((c) => buscarStatusDoCliente(c._id as string, tokenBubble))
   )
 
-  const clientesMapeados: ClienteComCidade[] = results.map((c, i) => ({
+  return todosResults.map((c, i) => ({
     id: c._id as string,
     bubble_id: c._id as string,
     razao_social: String(c['Razao Social'] ?? c['Nome'] ?? ''),
@@ -73,8 +84,6 @@ export async function buscarClientesDoAgente(
     concorrente_atual: undefined,
     data_vencimento_contrato: undefined,
   }))
-
-  return clientesMapeados
 }
 
 export async function buscarDadosCnpj(cnpj: string) {

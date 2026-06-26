@@ -13,33 +13,29 @@ async function bubbleFetch(path: string, token: string) {
   return res.json()
 }
 
-async function buscarStatusMap(
-  clienteIds: string[],
-  token: string
-): Promise<Record<string, string>> {
-  if (clienteIds.length === 0) return {}
+function extrairString(val: unknown): string {
+  if (!val) return ''
+  if (typeof val === 'string') return val
+  if (typeof val === 'object') {
+    const o = val as Record<string, unknown>
+    return String(o['Display'] ?? o['text'] ?? o['label'] ?? '')
+  }
+  return String(val)
+}
 
+async function buscarStatusDoCliente(clienteId: string, token: string): Promise<string> {
   const constraints = JSON.stringify([
-    { key: 'cliente', constraint_type: 'in', value: clienteIds },
+    { key: 'cliente', constraint_type: 'equals', value: clienteId },
   ])
   const params = new URLSearchParams({
     constraints,
     sort_field: 'Created Date',
     descending: 'true',
-    limit: '100',
+    limit: '1',
   })
-
   const json = await bubbleFetch(`/obj/Tarefa_Missao?${params}`, token)
-  const tarefas: Record<string, unknown>[] = json?.response?.results ?? []
-
-  const map: Record<string, string> = {}
-  for (const t of tarefas) {
-    const clienteId = t['cliente'] as string | undefined
-    if (clienteId && !map[clienteId]) {
-      map[clienteId] = String(t['Titulo'] ?? '')
-    }
-  }
-  return map
+  const results: Record<string, unknown>[] = json?.response?.results ?? []
+  return String(results[0]?.['Titulo'] ?? 'Prospectar cliente')
 }
 
 export async function buscarClientesDoAgente(
@@ -59,26 +55,24 @@ export async function buscarClientesDoAgente(
   const results: Record<string, unknown>[] = json?.response?.results ?? []
   if (results.length === 0) return []
 
-  const clienteIds = results.map((c) => c._id as string)
-  const statusMap = await buscarStatusMap(clienteIds, tokenBubble)
+  const statusList = await Promise.all(
+    results.map((c) => buscarStatusDoCliente(c._id as string, tokenBubble))
+  )
 
-  return results.map((c) => {
-    const id = c._id as string
-    return {
-      id,
-      bubble_id: id,
-      razao_social: String(c['Razao Social'] ?? c['Nome'] ?? ''),
-      cnpj: String(c['CNPJ'] ?? ''),
-      uf: String(c['UF_Região'] ?? ''),
-      cidade: '',
-      consumo_estimado: c['Consumo Estimado'] as number | undefined,
-      status_atual: statusMap[id] ?? 'Prospectar cliente',
-      responsavel_id: agenteId,
-      proximo_follow_up: c['Proximo Follow Up'] as string | undefined,
-      concorrente_atual: c['Concorrente'] as string | undefined,
-      data_vencimento_contrato: c['Data Vencimento Contrato'] as string | undefined,
-    }
-  })
+  return results.map((c, i) => ({
+    id: c._id as string,
+    bubble_id: c._id as string,
+    razao_social: String(c['Razao Social'] ?? c['Nome'] ?? ''),
+    cnpj: String(c['CNPJ'] ?? ''),
+    uf: extrairString(c['UF_Região']),
+    cidade: '',
+    consumo_estimado: c['Consumo Estimado'] as number | undefined,
+    status_atual: statusList[i],
+    responsavel_id: agenteId,
+    proximo_follow_up: c['Proximo Follow Up'] as string | undefined,
+    concorrente_atual: c['Concorrente'] as string | undefined,
+    data_vencimento_contrato: c['Data Vencimento Contrato'] as string | undefined,
+  }))
 }
 
 export async function buscarDadosCnpj(cnpj: string) {

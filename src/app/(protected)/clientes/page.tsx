@@ -34,18 +34,22 @@ export default async function ClientesPage() {
       }
     }
 
-    if (metas && metas.length > 0) {
-      const metaMap = Object.fromEntries(metas.map((m) => [m.cliente_id, m]))
-      clientesFinais = clientes.map((c) => {
-        const meta = metaMap[c.id]
-        if (!meta) return c
-        return {
-          ...c,
-          concorrente_atual: meta.concorrente_atual ?? undefined,
-          data_vencimento_contrato: meta.data_vencimento_contrato ?? undefined,
-        }
-      })
+    const metaMap = Object.fromEntries((metas ?? []).map((m) => [m.cliente_id, m]))
+    const ultimaAtividadeMap: Record<string, string | undefined> = {}
+    for (const a of (atividades ?? [])) {
+      if (!ultimaAtividadeMap[a.cliente_id]) {
+        ultimaAtividadeMap[a.cliente_id] = a.follow_up_data ?? undefined
+      }
     }
+    clientesFinais = clientes.map((c) => {
+      const meta = metaMap[c.id]
+      return {
+        ...c,
+        concorrente_atual: meta?.concorrente_atual ?? undefined,
+        data_vencimento_contrato: meta?.data_vencimento_contrato ?? undefined,
+        proximo_follow_up: ultimaAtividadeMap[c.id] ?? c.proximo_follow_up,
+      }
+    })
   }
 
   return (

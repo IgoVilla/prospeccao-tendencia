@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { X, Users } from 'lucide-react'
 import { Atividade } from '@/types'
-import { ClienteComCidade } from '@/lib/mock-clientes'
+import { ClienteComCidade } from '@/lib/nexi'
 import { proximoFollowUp } from '@/lib/utils'
 
 const TIPOS = ['Ligacao', 'Email', 'Reuniao', 'Proposta', 'Declinio'] as const

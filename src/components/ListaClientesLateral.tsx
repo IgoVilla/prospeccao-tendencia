@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Search, Clock, AlertTriangle, CheckSquare2, Square, Users, X } from 'lucide-react'
 import { Atividade } from '@/types'
-import { ClienteComCidade } from '@/lib/mock-clientes'
+import { ClienteComCidade } from '@/lib/nexi'
 import { followUpAtrasado, renovacaoProxima, diasAtraso, formatarDataCurta } from '@/lib/utils'
 import ModalAcaoEmMassa from './ModalAcaoEmMassa'
 

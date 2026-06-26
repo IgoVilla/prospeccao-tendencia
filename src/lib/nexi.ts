@@ -1,17 +1,19 @@
 import { Cliente } from '@/types'
 
-const BUBBLE_API = process.env.BUBBLE_API_URL!
+const BUBBLE_BASE = 'https://nexiplay.com/api/1.1'
+
+export type ClienteComCidade = Cliente & { cidade: string }
 
 export async function buscarClientesDoAgente(
   agenteId: string,
   tokenBubble: string
-): Promise<Cliente[]> {
+): Promise<ClienteComCidade[]> {
   const constraints = JSON.stringify([
     { key: 'Responsavel', constraint_type: 'equals', value: agenteId },
   ])
 
   const res = await fetch(
-    `${BUBBLE_API}/obj/Cliente?constraints=${encodeURIComponent(constraints)}`,
+    `${BUBBLE_BASE}/obj/Cliente?constraints=${encodeURIComponent(constraints)}`,
     {
       headers: { Authorization: `Bearer ${tokenBubble}` },
       next: { revalidate: 0 },
@@ -21,17 +23,21 @@ export async function buscarClientesDoAgente(
   if (!res.ok) return []
 
   const json = await res.json()
-  const results = json?.response?.results ?? []
+  const results: Record<string, unknown>[] = json?.response?.results ?? []
 
-  return results.map((c: Record<string, unknown>) => ({
+  return results.map((c) => ({
     id: c._id as string,
     bubble_id: c._id as string,
-    razao_social: (c['Razao Social'] as string) ?? '',
-    cnpj: (c['CNPJ'] as string) ?? '',
-    uf: (c['UF'] as string) ?? '',
+    razao_social: String(c['Razao Social'] ?? c['Nome'] ?? ''),
+    cnpj: String(c['CNPJ'] ?? ''),
+    uf: String(c['UF'] ?? ''),
+    cidade: String(c['Cidade'] ?? ''),
     consumo_estimado: c['Consumo Estimado'] as number | undefined,
-    status_atual: (c['Status'] as string) ?? 'Novo',
+    status_atual: String(c['Status'] ?? 'Novo'),
     responsavel_id: agenteId,
+    proximo_follow_up: c['Proximo Follow Up'] as string | undefined,
+    concorrente_atual: c['Concorrente'] as string | undefined,
+    data_vencimento_contrato: c['Data Vencimento Contrato'] as string | undefined,
   }))
 }
 

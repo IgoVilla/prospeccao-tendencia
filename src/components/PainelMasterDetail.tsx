@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { Atividade } from '@/types'
-import { ClienteComCidade } from '@/lib/mock-clientes'
+import { ClienteComCidade } from '@/lib/nexi'
 import { followUpAtrasado, renovacaoProxima } from '@/lib/utils'
 import ListaClientesLateral from './ListaClientesLateral'
 import PainelInfoCliente from './PainelInfoCliente'

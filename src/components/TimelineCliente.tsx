@@ -1,17 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Phone, Mail, Users, FileText, XCircle, Calendar, CheckCircle, Clock, XOctagon, CalendarClock } from 'lucide-react'
+import { Phone, Mail, Users, FileText, XCircle, Calendar, CheckCircle, Clock, XOctagon, CalendarClock, MessageSquare } from 'lucide-react'
 import { Atividade } from '@/types'
 import { formatarData, formatarDataCurta } from '@/lib/utils'
 import ModalRegistrarContato from './ModalRegistrarContato'
 
 const TIPO_CONFIG: Record<string, { label: string; icon: React.ReactNode; cor: string }> = {
-  Ligacao:  { label: 'Ligação',   icon: <Phone size={14} />,    cor: '#6366f1' },
-  Email:    { label: 'E-mail',    icon: <Mail size={14} />,     cor: '#0ea5e9' },
-  Reuniao:  { label: 'Reunião',   icon: <Users size={14} />,    cor: '#8b5cf6' },
-  Proposta: { label: 'Proposta',  icon: <FileText size={14} />, cor: '#10b981' },
-  Declinio: { label: 'Declínio', icon: <XCircle size={14} />,  cor: '#ef4444' },
+  Ligacao:        { label: 'Ligação',        icon: <Phone size={14} />,          cor: '#6366f1' },
+  Email:          { label: 'E-mail',         icon: <Mail size={14} />,           cor: '#0ea5e9' },
+  Reuniao:        { label: 'Reunião',        icon: <Users size={14} />,          cor: '#8b5cf6' },
+  Proposta:       { label: 'Proposta',       icon: <FileText size={14} />,       cor: '#10b981' },
+  Declinio:       { label: 'Declínio',       icon: <XCircle size={14} />,        cor: '#ef4444' },
+  ComentarioNexi: { label: 'Comentário Nexi', icon: <MessageSquare size={14} />, cor: '#64748b' },
 }
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; cor: string; bg: string }> = {
@@ -93,13 +94,15 @@ export default function TimelineCliente({
                     </span>
                   </div>
 
-                  <span
-                    className="text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 w-fit"
-                    style={{ background: statusConfig.bg, color: statusConfig.cor }}
-                  >
-                    {statusConfig.icon}
-                    {statusConfig.label}
-                  </span>
+                  {atividade.tipo !== 'ComentarioNexi' && atividade.status && (
+                    <span
+                      className="text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 w-fit"
+                      style={{ background: statusConfig.bg, color: statusConfig.cor }}
+                    >
+                      {statusConfig.icon}
+                      {statusConfig.label}
+                    </span>
+                  )}
 
                   {atividade.comentario && (
                     <p

@@ -18,8 +18,8 @@ export interface Atividade {
   id: string
   agente_id: string
   cliente_id: string
-  tipo: 'Ligacao' | 'Email' | 'Reuniao' | 'Proposta' | 'Declinio'
-  status: 'Atendeu' | 'Nao atendeu' | 'Agendou' | 'Recusou'
+  tipo: 'Ligacao' | 'Email' | 'Reuniao' | 'Proposta' | 'Declinio' | 'ComentarioNexi'
+  status?: 'Atendeu' | 'Nao atendeu' | 'Agendou' | 'Recusou'
   comentario?: string
   follow_up_data?: string
   created_at: string

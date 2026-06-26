@@ -12,9 +12,9 @@ export default async function ClientesPage() {
   const cookieStore = await cookies()
   const bubbleToken = cookieStore.get('bubble_token')?.value
 
-  const clientes = bubbleId && bubbleToken
+  const { clientes, comentariosBubble } = bubbleId && bubbleToken
     ? await buscarClientesDoAgente(bubbleId, bubbleToken)
-    : []
+    : { clientes: [], comentariosBubble: {} }
 
   let atividadesPorCliente: Record<string, Atividade[]> = {}
   let clientesFinais = clientes
@@ -33,6 +33,14 @@ export default async function ClientesPage() {
         if (!atividadesPorCliente[a.cliente_id]) atividadesPorCliente[a.cliente_id] = []
         atividadesPorCliente[a.cliente_id].push(a as Atividade)
       }
+    }
+
+    // Mesclar comentários do Bubble (ComentarioNexi) e reordenar por data
+    for (const [clienteId, comentarios] of Object.entries(comentariosBubble)) {
+      const existentes = atividadesPorCliente[clienteId] ?? []
+      atividadesPorCliente[clienteId] = [...existentes, ...comentarios].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
     }
 
     const metaMap = Object.fromEntries((metas ?? []).map((m) => [m.cliente_id, m]))

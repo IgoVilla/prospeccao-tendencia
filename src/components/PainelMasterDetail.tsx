@@ -59,7 +59,8 @@ export default function PainelMasterDetail({
   const ultimoStatusMap = useMemo(() => {
     const map: Record<string, string> = {}
     for (const [id, ativs] of Object.entries(atividadesLocais)) {
-      if (ativs.length > 0) map[id] = ativs[0].status
+      const ultima = ativs.find((a) => a.tipo !== 'ComentarioNexi')
+      if (ultima?.status) map[id] = ultima.status
     }
     return map
   }, [atividadesLocais])

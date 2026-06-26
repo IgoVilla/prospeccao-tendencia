@@ -1,4 +1,4 @@
-import { Cliente } from '@/types'
+import { Cliente, Atividade } from '@/types'
 
 const BUBBLE_BASE = 'https://nexiplay.com/api/1.1'
 
@@ -23,7 +23,10 @@ function extrairString(val: unknown): string {
   return String(val)
 }
 
-async function buscarStatusDoCliente(clienteId: string, token: string): Promise<string> {
+async function buscarDadosTarefa(
+  clienteId: string,
+  token: string
+): Promise<{ status: string; comentarios: Atividade[] }> {
   const constraints = JSON.stringify([
     { key: 'cliente', constraint_type: 'equals', value: clienteId },
   ])
@@ -31,17 +34,38 @@ async function buscarStatusDoCliente(clienteId: string, token: string): Promise<
     constraints,
     sort_field: 'Created Date',
     descending: 'true',
-    limit: '1',
   })
   const json = await bubbleFetch(`/obj/Tarefa_Missao?${params}`, token)
   const results: Record<string, unknown>[] = json?.response?.results ?? []
-  return String(results[0]?.['Titulo'] ?? 'Prospectar cliente')
+
+  const status = String(results[0]?.['Titulo'] ?? 'Prospectar cliente')
+
+  const comentarios: Atividade[] = []
+  for (const task of results) {
+    const field = task['Comentarios']
+    if (!field) continue
+    const lista = Array.isArray(field) ? field : [field]
+    lista.forEach((item, idx) => {
+      const texto = (typeof item === 'string' ? item : String(item?.Texto ?? item?.texto ?? item?.text ?? '')).trim()
+      if (!texto) return
+      comentarios.push({
+        id: `bubble-${String(task._id)}-${idx}`,
+        agente_id: '',
+        cliente_id: clienteId,
+        tipo: 'ComentarioNexi',
+        comentario: texto,
+        created_at: String(task['Created Date'] ?? new Date().toISOString()),
+      })
+    })
+  }
+
+  return { status, comentarios }
 }
 
 export async function buscarClientesDoAgente(
   agenteId: string,
   tokenBubble: string
-): Promise<ClienteComCidade[]> {
+): Promise<{ clientes: ClienteComCidade[]; comentariosBubble: Record<string, Atividade[]> }> {
   const constraints = encodeURIComponent(JSON.stringify([
     { key: 'Responsavel', constraint_type: 'equals', value: agenteId },
   ]))
@@ -64,13 +88,13 @@ export async function buscarClientesDoAgente(
     cursor += results.length
   }
 
-  if (todosResults.length === 0) return []
+  if (todosResults.length === 0) return { clientes: [], comentariosBubble: {} }
 
-  const statusList = await Promise.all(
-    todosResults.map((c) => buscarStatusDoCliente(c._id as string, tokenBubble))
+  const tarefaList = await Promise.all(
+    todosResults.map((c) => buscarDadosTarefa(c._id as string, tokenBubble))
   )
 
-  return todosResults.map((c, i) => ({
+  const clientes: ClienteComCidade[] = todosResults.map((c, i) => ({
     id: c._id as string,
     bubble_id: c._id as string,
     razao_social: String(c['Razao Social'] ?? c['Nome'] ?? ''),
@@ -78,12 +102,22 @@ export async function buscarClientesDoAgente(
     uf: extrairString(c['UF_Região']),
     cidade: '',
     consumo_estimado: c['Consumo Estimado'] as number | undefined,
-    status_atual: statusList[i],
+    status_atual: tarefaList[i].status,
     responsavel_id: agenteId,
     proximo_follow_up: c['Proximo Follow Up'] ? String(c['Proximo Follow Up']).slice(0, 10) : undefined,
     concorrente_atual: undefined,
     data_vencimento_contrato: undefined,
   }))
+
+  const comentariosBubble: Record<string, Atividade[]> = {}
+  for (let i = 0; i < todosResults.length; i++) {
+    const id = todosResults[i]._id as string
+    if (tarefaList[i].comentarios.length > 0) {
+      comentariosBubble[id] = tarefaList[i].comentarios
+    }
+  }
+
+  return { clientes, comentariosBubble }
 }
 
 export async function buscarDadosCnpj(cnpj: string) {

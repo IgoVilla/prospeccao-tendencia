@@ -13,7 +13,7 @@ export default async function PainelPage() {
   const bubbleToken = cookieStore.get('bubble_token')?.value ?? ''
   const bubbleId = user?.user_metadata?.bubble_id ?? ''
 
-  const clientes = await buscarClientesDoAgente(bubbleId, bubbleToken)
+  const { clientes } = await buscarClientesDoAgente(bubbleId, bubbleToken)
   const clienteIds = clientes.map((c) => c.bubble_id)
 
   const [metasResult, atividadesResult, enriqResult] = await Promise.all([

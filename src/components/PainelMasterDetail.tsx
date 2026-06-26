@@ -26,7 +26,7 @@ export default function PainelMasterDetail({
   const [filtroRenovacao, setFiltroRenovacao] = useState(false)
   const [busca, setBusca] = useState('')
   const [atividadesLocais, setAtividadesLocais] = useState<Record<string, Atividade[]>>(atividadesPorCliente)
-  const [metaLocais, setMetaLocais] = useState<Record<string, { concorrente_atual?: string; data_vencimento_contrato?: string }>>({})
+  const [metaLocais, setMetaLocais] = useState<Record<string, { concorrente_atual?: string; data_vencimento_contrato?: string; proximo_follow_up?: string }>>({})
 
   const clientesComMeta = useMemo(() =>
     clientes.map((c) => ({ ...c, ...(metaLocais[c.bubble_id] ?? {}) })),
@@ -81,6 +81,12 @@ export default function PainelMasterDetail({
       ...prev,
       [clienteId]: [atividade, ...(prev[clienteId] ?? [])],
     }))
+    if (atividade.follow_up_data !== undefined) {
+      setMetaLocais((prev) => ({
+        ...prev,
+        [clienteId]: { ...(prev[clienteId] ?? {}), proximo_follow_up: atividade.follow_up_data },
+      }))
+    }
   }
 
   function adicionarAtividadeEmMassa(ids: string[], atividades: Atividade[]) {
@@ -88,6 +94,15 @@ export default function PainelMasterDetail({
       const next = { ...prev }
       for (const a of atividades) {
         next[a.cliente_id] = [a, ...(next[a.cliente_id] ?? [])]
+      }
+      return next
+    })
+    setMetaLocais((prev) => {
+      const next = { ...prev }
+      for (const a of atividades) {
+        if (a.follow_up_data !== undefined) {
+          next[a.cliente_id] = { ...(next[a.cliente_id] ?? {}), proximo_follow_up: a.follow_up_data }
+        }
       }
       return next
     })

@@ -20,6 +20,7 @@ export default async function ClientePage({
         cliente={cliente}
         dadosCnpj={null}
         agenteId="agente-mock"
+        temHistorico={atividades.length > 0}
       />
       <TimelineCliente
         clienteId={id}

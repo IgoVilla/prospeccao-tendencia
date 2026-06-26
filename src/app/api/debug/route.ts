@@ -22,21 +22,26 @@ export async function GET(request: NextRequest) {
     { key: 'Responsavel', constraint_type: 'equals', value: bubbleId },
   ])
   const res = await fetch(
-    `https://nexiplay.com/api/1.1/obj/Cliente?constraints=${encodeURIComponent(constraints)}&limit=2`,
+    `https://nexiplay.com/api/1.1/obj/Cliente?constraints=${encodeURIComponent(constraints)}&limit=20`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
   const json = await res.json()
-  const first = json?.response?.results?.[0] ?? {}
+  const results: Record<string, unknown>[] = json?.response?.results ?? []
 
-  const tarefaRes = await fetch(
-    `https://nexiplay.com/api/1.1/obj/Tarefa_Missao?constraints=${encodeURIComponent(JSON.stringify([{ key: 'cliente', constraint_type: 'equals', value: first._id }]))}&sort_field=Created%20Date&descending=true&limit=2`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  )
-  const tarefaJson = await tarefaRes.json()
+  // Collect all unique keys across all clients
+  const allKeys = [...new Set(results.flatMap((c) => Object.keys(c)))].sort()
+
+  // Find clients that have any UF-related field
+  const clientesComUF = results
+    .filter((c) => Object.keys(c).some((k) => k.toLowerCase().includes('uf') || k.toLowerCase().includes('regi')))
+    .map((c) => {
+      const ufKeys = Object.keys(c).filter((k) => k.toLowerCase().includes('uf') || k.toLowerCase().includes('regi'))
+      return { _id: c._id, Nome: c['Nome'], ufFields: Object.fromEntries(ufKeys.map((k) => [k, c[k]])) }
+    })
 
   return NextResponse.json({
-    clienteKeys: Object.keys(first),
-    clienteRaw: first,
-    tarefas: tarefaJson?.response?.results ?? [],
+    totalClientes: results.length,
+    allKeys,
+    clientesComUF,
   })
 }

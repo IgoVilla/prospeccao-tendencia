@@ -75,14 +75,18 @@ export async function GET(request: NextRequest) {
     try { userData = JSON.parse(userText) } catch { /* not json */ }
     const u = userData?.response ?? {}
     const auth = u.authentication as Record<string, unknown> | undefined
-    const authEmail = auth?.email as Record<string, unknown> | string | undefined
-    const emailFromAuth = typeof authEmail === 'string'
-      ? authEmail
-      : typeof authEmail === 'object' && authEmail !== null
-        ? (authEmail.email as string | undefined) ?? ''
-        : ''
-    email = ((u['authentication email'] ?? u['Authentication Email'] ?? u.email ?? u.Email ?? emailFromAuth ?? '') as string).toLowerCase().trim()
-    nome = ((u.Nome ?? u.Sobrenome ? `${u.Nome ?? ''} ${u.Sobrenome ?? ''}`.trim() : '') || u.Name ?? u.name ?? email) as string
+    const authEmail = auth?.email
+    let emailFromAuth = ''
+    if (typeof authEmail === 'string') {
+      emailFromAuth = authEmail
+    } else if (authEmail !== null && typeof authEmail === 'object') {
+      emailFromAuth = String((authEmail as Record<string, unknown>).email ?? '')
+    }
+    const rawEmail = (u['authentication email'] ?? u['Authentication Email'] ?? u.email ?? u.Email ?? emailFromAuth ?? '') as string
+    email = rawEmail.toLowerCase().trim()
+    const nomeFirst = u.Nome ? String(u.Nome) : ''
+    const nomeLast = u.Sobrenome ? String(u.Sobrenome) : ''
+    nome = (nomeFirst + (nomeLast ? ' ' + nomeLast : '')).trim() || String(u.Name ?? u.name ?? email)
     if (!email) {
       const debugAuth = encodeURIComponent(JSON.stringify(auth).slice(0, 300))
       return NextResponse.redirect(`${APP_URL}/?erro=sem_email&auth=${debugAuth}`)

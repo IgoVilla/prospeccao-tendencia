@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   let access_token = ''
   let bubble_user_id = ''
   try {
-    const tokenRes = await undiciFetch('https://nexiplay-84024.bubbleapps.io/oauth/access_token', {
+    const tokenRes = await undiciFetch('https://nexiplay.com/api/1.1/oauth/access_token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({

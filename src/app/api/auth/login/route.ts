@@ -14,7 +14,7 @@ export async function GET() {
     path: '/',
   })
 
-  const url = new URL('https://nexiplay-84024.bubbleapps.io/oauth/authorize')
+  const url = new URL('https://nexiplay.com/api/1.1/oauth/authorize')
   url.searchParams.set('client_id', process.env.BUBBLE_CLIENT_ID!)
   url.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`)
   url.searchParams.set('response_type', 'code')
